@@ -3,10 +3,11 @@
 import React, { useState, useEffect, useRef, useTransition } from "react";
 import Link from "next/link";
 import { Blobatar } from "@blobatar/react";
-import { account } from "@/lib/appwrite";
+import { account, teams } from "@/lib/appwrite";
 import { clearCookieAction } from "@/app/actions";
 import { ThemeToggleButton } from "@/components/ui/ThemeToggleButton";
 import { AuthModal } from "@/components/ui/AuthModal";
+import { ProfileDropdown, MobileProfileMenu } from "@/components/ui/profile-dropdown";
 import {
   Award,
   BookOpen,
@@ -14,9 +15,12 @@ import {
   Building2,
   Cloud,
   Code2,
+  CreditCard,
   GraduationCap,
   Layers,
   RefreshCw,
+  Settings,
+  User,
   Users,
   Wrench,
   Zap,
@@ -175,6 +179,7 @@ const navItems = [
 
 export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
   const [user, setUser] = useState(initialUser);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Avatar seed: cookie (SSR) > localStorage > null
   const [avatarSeed, setAvatarSeed] = useState(() => {
@@ -186,7 +191,6 @@ export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
   });
 
   const [loading, setLoading] = useState(!initialUser);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState(null);
   const [openMobileSection, setOpenMobileSection] = useState(null);
@@ -224,43 +228,6 @@ export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
   useEffect(() => {
     return () => cancelClose();
   }, []);
-
-  // User dropdown: close on outside click, Escape, or when the mouse moves away
-  const userMenuRef = useRef(null);
-  const userCloseTimer = useRef(null);
-
-  const cancelUserClose = () => {
-    if (userCloseTimer.current) {
-      clearTimeout(userCloseTimer.current);
-      userCloseTimer.current = null;
-    }
-  };
-
-  const closeUserSoon = () => {
-    cancelUserClose();
-    userCloseTimer.current = setTimeout(() => setDropdownOpen(false), 250);
-  };
-
-  useEffect(() => {
-    if (!dropdownOpen) return;
-
-    const onPointerDown = (event) => {
-      if (!userMenuRef.current?.contains(event.target)) {
-        setDropdownOpen(false);
-      }
-    };
-    const onKeyDown = (event) => {
-      if (event.key === "Escape") setDropdownOpen(false);
-    };
-
-    document.addEventListener("pointerdown", onPointerDown);
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      cancelUserClose();
-      document.removeEventListener("pointerdown", onPointerDown);
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [dropdownOpen]);
 
   useEffect(() => {
     const handlePointerDown = (event) => {
@@ -362,6 +329,57 @@ export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialUser]);
 
+  useEffect(() => {
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+
+    const checkAdminStatus = async () => {
+      // 1. Check user labels in Appwrite account (e.g. ['admin'])
+      if (
+        user.labels &&
+        Array.isArray(user.labels) &&
+        user.labels.some((l) => l.toLowerCase() === "admin")
+      ) {
+        setIsAdmin(true);
+        return;
+      }
+
+      // 2. Check Appwrite Teams membership
+      try {
+        if (teams && typeof teams.list === "function") {
+          const res = await teams.list();
+          const configuredAdminTeamId =
+            process.env.NEXT_PUBLIC_APPWRITE_ADMIN_TEAM_ID?.toLowerCase();
+
+          const hasAdminTeam = res.teams?.some((t) => {
+            const teamId = (t.$id || "").toLowerCase();
+            const teamName = (t.name || "").toLowerCase();
+            const roles = (t.roles || []).map((r) => r.toLowerCase());
+
+            return (
+              teamId === "admin" ||
+              teamName === "admin" ||
+              (configuredAdminTeamId && teamId === configuredAdminTeamId) ||
+              roles.includes("admin") ||
+              roles.includes("owner")
+            );
+          });
+
+          setIsAdmin(!!hasAdminTeam);
+          return;
+        }
+      } catch (err) {
+        console.warn("Could not query user teams:", err);
+      }
+
+      setIsAdmin(false);
+    };
+
+    checkAdminStatus();
+  }, [user]);
+
   const refreshUser = () => {
     if (account && typeof account.get === "function") {
       account
@@ -382,19 +400,18 @@ export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
         if (account && typeof account.deleteSession === "function") {
           await account.deleteSession("current");
         }
-      } catch {}
+      } catch { }
 
       try {
         localStorage.removeItem("auth_user");
         localStorage.removeItem("avatar_seed");
-      } catch {}
+      } catch { }
 
       await clearCookieAction("auth_user");
       await clearCookieAction("avatar_seed");
 
       setUser(null);
       setAvatarSeed(null);
-      setDropdownOpen(false);
     });
   };
 
@@ -477,11 +494,10 @@ export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
                       aria-expanded={isOpen}
                       aria-controls={menuId}
                       onClick={() => openNow(item.id)}
-                      className={`flex cursor-pointer items-center gap-1 rounded-lg px-3 py-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                        isOpen
+                      className={`flex cursor-pointer items-center gap-1 rounded-lg px-3 py-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${isOpen
                           ? "bg-secondary text-foreground"
                           : "text-muted-foreground hover:bg-secondary/70 hover:text-foreground"
-                      }`}
+                        }`}
                     >
                       {item.label}
                       <svg
@@ -504,14 +520,12 @@ export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
                       id={menuId}
                       aria-labelledby={`${item.id}-trigger`}
                       hidden={!isOpen}
-                      className={`absolute left-0 top-full z-50 max-w-[calc(100vw-2rem)] ${
-                        item.groups.length > 1 ? "w-[34rem]" : "w-80"
-                      }`}
+                      className={`absolute left-0 top-full z-50 max-w-[calc(100vw-2rem)] ${item.groups.length > 1 ? "w-[34rem]" : "w-80"
+                        }`}
                     >
                       <div
-                        className={`grid gap-6 rounded-b-2xl rounded-t-none border border-t-0 border-border bg-card p-5 shadow-2xl ${
-                          item.groups.length > 1 ? "grid-cols-2" : "grid-cols-1"
-                        }`}
+                        className={`grid gap-6 rounded-b-2xl rounded-t-none border border-t-0 border-border bg-card p-5 shadow-2xl ${item.groups.length > 1 ? "grid-cols-2" : "grid-cols-1"
+                          }`}
                         onMouseEnter={cancelClose}
                       >
                         {item.groups.map((group) => (
@@ -578,124 +592,47 @@ export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
             aria-label="Refresh animation rendering and API cache"
           >
             <RefreshCw
-              className={`h-3.5 w-3.5 transition-transform duration-300 ${
-                refreshing
+              className={`h-3.5 w-3.5 transition-transform duration-300 ${refreshing
                   ? "animate-spin text-[#E11D48]"
                   : "group-hover:rotate-180"
-              }`}
+                }`}
             />
           </button>
 
           {loading ? (
             <div className="hidden md:block h-8 w-20 animate-pulse rounded-full bg-muted" />
           ) : user ? (
-            /* Logged-In: Blobatar avatar + dropdown (desktop only, hidden on phone view) */
-            <div
-              ref={userMenuRef}
-              className="relative hidden md:block"
-              onMouseEnter={cancelUserClose}
-              onMouseLeave={closeUserSoon}
-            >
-              <button
-                type="button"
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                aria-expanded={dropdownOpen}
-                aria-haspopup="menu"
-                className="flex cursor-pointer items-center gap-2.5 rounded-full border border-border bg-secondary/80 p-1 pl-2 transition-all hover:border-foreground/20"
-              >
-                <div
-                  className="hidden max-w-[110px] md:max-w-[130px] lg:max-w-[160px] pr-1 text-right sm:block"
-                  title={user.name}
-                >
-                  <span className="block truncate text-xs font-semibold text-foreground">
-                    {user.name}
-                  </span>
-                </div>
-                {/* Blobatar - deterministic avatar seeded by user name, animates on hover */}
-                <div className="relative h-8 w-8 flex-shrink-0">
-                  <div className="h-full w-full overflow-hidden rounded-full">
-                    <Blobatar
-                      name={avatarSeed ?? user.name}
-                      animate="hover"
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        display: "block",
-                      }}
-                    />
-                  </div>
-                </div>
-              </button>
-
-              {/* User Dropdown */}
-              {dropdownOpen && (
-                <div className="absolute right-0 z-50 mt-2 w-56 animate-in fade-in zoom-in-95 rounded-2xl border border-border bg-card p-2 shadow-2xl backdrop-blur-xl">
-                  {/* User info header */}
-                  <div className="mb-1 flex items-center gap-3 border-b border-border px-3 py-2">
-                    <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-full border border-border">
-                      <Blobatar
-                        name={avatarSeed ?? user.name}
-                        animate="hover"
-                        style={{ width: "100%", height: "100%" }}
-                      />
-                    </div>
-                    <div className="flex min-w-0 flex-col">
-                      <p
-                        className="truncate text-xs font-semibold text-foreground"
-                        title={user.name}
-                      >
-                        {user.name}
-                      </p>
-                      <p
-                        className="truncate text-[11px] text-muted-foreground"
-                        title={user.email}
-                      >
-                        {user.email}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
-                    <Link
-                      href="/dashboard"
-                      className="rounded-lg px-3 py-2 transition-colors hover:bg-secondary hover:text-foreground"
-                      onClick={() => setDropdownOpen(false)}
-                    >
-                      Dashboard
-                    </Link>
-                    <Link
-                      href="/profile"
-                      className="rounded-lg px-3 py-2 transition-colors hover:bg-secondary hover:text-foreground"
-                      onClick={() => setDropdownOpen(false)}
-                    >
-                      Profile &amp; Account
-                    </Link>
-                    <a
-                      href="#settings"
-                      className="rounded-lg px-3 py-2 transition-colors hover:bg-secondary hover:text-foreground"
-                      onClick={() => setDropdownOpen(false)}
-                    >
-                      Workspace Settings
-                    </a>
-                    <a
-                      href="#billing"
-                      className="rounded-lg px-3 py-2 transition-colors hover:bg-secondary hover:text-foreground"
-                      onClick={() => setDropdownOpen(false)}
-                    >
-                      Billing &amp; Subscription
-                    </a>
-                  </div>
-                  <div className="mt-1 border-t border-border pt-1">
-                    <button
-                      type="button"
-                      onClick={handleLogout}
-                      disabled={isPending}
-                      className="w-full cursor-pointer rounded-lg px-3 py-2 text-left text-xs font-medium text-[#E11D48] transition-colors hover:bg-[#E11D48]/10 disabled:opacity-50"
-                    >
-                      {isPending ? "Signing out…" : "Sign Out"}
-                    </button>
-                  </div>
-                </div>
-              )}
+            /* Logged-In: Kokonut UI Profile Dropdown (desktop only, hidden on phone view) */
+            <div className="hidden md:block">
+              <ProfileDropdown
+                accounts={[
+                  {
+                    id: user.$id || "current",
+                    name: user.name || "User",
+                    email: user.email || "",
+                    plan: isAdmin ? "Admin" : "Member",
+                  },
+                ]}
+                defaultAccountId={user.$id || "current"}
+                items={[
+                  {
+                    label: "Dashboard",
+                    href: "/dashboard",
+                    icon: <User className="size-4" />,
+                  },
+                  {
+                    label: "Profile & Account",
+                    href: "/profile",
+                    icon: <Settings className="size-4" />,
+                  },
+                  {
+                    label: "Billing & Subscription",
+                    href: "#billing",
+                    icon: <CreditCard className="size-4" />,
+                  },
+                ]}
+                onSignOut={handleLogout}
+              />
             </div>
           ) : (
             /* Logged-Out: Auth Modal trigger */
@@ -861,43 +798,61 @@ export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
             );
           })}
         </nav>
-        {user && (
-          <div className="border-t border-border pt-3">
-            <div className="mb-3 flex items-center gap-3 rounded-xl border border-border bg-card p-2.5">
-              <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-full border border-border">
-                <Blobatar
-                  name={avatarSeed ?? user.name}
-                  animate="hover"
-                  style={{ width: "100%", height: "100%" }}
-                />
-              </div>
-              <div className="flex min-w-0 flex-col">
-                <p
-                  className="truncate text-xs font-semibold text-foreground"
-                  title={user.name}
-                >
-                  {user.name}
-                </p>
-                <p
-                  className="truncate text-[11px] text-muted-foreground"
-                  title={user.email}
-                >
-                  {user.email}
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={handleLogout}
-              disabled={isPending}
-              className="w-full cursor-pointer rounded-full border border-destructive/40 py-2 text-center text-xs text-destructive hover:bg-destructive/10 disabled:opacity-50"
-            >
-              {isPending ? "Signing out…" : "Sign Out"}
-            </button>
+          {
+            user?(
+          <div className = "border-t border-border pt-3" >
+            <MobileProfileMenu
+              account={{
+                id: user.$id || "current",
+                name: user.name || "User",
+                email: user.email || "",
+                plan: isAdmin ? "Admin" : "Member",
+              }}
+              items={[
+                {
+                  label: "Dashboard",
+                  href: "/dashboard",
+                  icon: <User className="size-4" />,
+                },
+                {
+                  label: "Profile & Account",
+                  href: "/profile",
+                  icon: <Settings className="size-4" />,
+                },
+                {
+                  label: "Billing & Subscription",
+                  href: "#billing",
+                  icon: <CreditCard className="size-4" />,
+                },
+              ]}
+              onSignOut={handleLogout}
+              onItemClick={() => {
+                setMobileMenuOpen(false);
+                setOpenMobileSection(null);
+              }}
+            />
           </div>
-        )}
-      </div>
-    </header>
+        ) : (
+          <div className="border-t border-border pt-3">
+            <AuthModal
+              onAuthSuccess={(name) => {
+                handleAuthSuccess(name);
+                setMobileMenuOpen(false);
+              }}
+              trigger={
+                <button
+                  type="button"
+                  className="w-full cursor-pointer rounded-full bg-primary py-2.5 text-center text-xs font-semibold text-primary-foreground shadow-sm transition-all hover:opacity-90"
+                >
+                  Sign In / Register
+                </button>
+              }
+            />
+    </div>
+  )
+}
+      </div >
+    </header >
   );
 }
 

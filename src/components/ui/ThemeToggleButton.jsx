@@ -9,6 +9,11 @@ export function ThemeToggleButton() {
 
   useEffect(() => {
     setMounted(true);
+    const syncTheme = () => {
+      const isDark = document.documentElement.classList.contains("dark");
+      setTheme(isDark ? "dark" : "light");
+    };
+
     const stored = localStorage.getItem("theme");
     const prefersDark = window.matchMedia(
       "(prefers-color-scheme: dark)"
@@ -21,6 +26,9 @@ export function ThemeToggleButton() {
       setTheme("light");
       document.documentElement.classList.remove("dark");
     }
+
+    window.addEventListener("theme-change", syncTheme);
+    return () => window.removeEventListener("theme-change", syncTheme);
   }, []);
 
   const toggleTheme = () => {
@@ -34,6 +42,7 @@ export function ThemeToggleButton() {
       document.documentElement.classList.remove("dark");
       localStorage.setItem("theme", "light");
     }
+    window.dispatchEvent(new Event("theme-change"));
   };
 
   if (!mounted) {

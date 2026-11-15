@@ -1,4 +1,4 @@
-import { Client, Account, Databases } from "appwrite";
+import { Client, Account, Databases, Teams } from "appwrite";
 
 const endpoint =
   process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || "https://sfo.cloud.appwrite.io/v1";
@@ -9,5 +9,6 @@ const client = new Client().setEndpoint(endpoint).setProject(projectId);
 
 const account = new Account(client);
 const databases = new Databases(client);
+const teams = new Teams(client);
 
-export { client, account, databases };
+export { client, account, databases, teams };
