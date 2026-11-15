@@ -131,27 +131,28 @@ export default function Home() {
           </div>
         ) : status === "success" ? (
           <h1 className="font-[Poppins] text-2xl font-light text-[#2D2D31]">
-            Congratulations!
+            Congratulations! Connected Successfully
           </h1>
         ) : (
           <h1 className="font-[Poppins] text-2xl font-light text-[#2D2D31]">
-            Check connection
+            Verify Appwrite Cloud Connection
           </h1>
         )}
 
-        <p className="mt-2 mb-8">
+        <p className="mt-2 mb-8 text-[#56565C]">
           {status === "success" ? (
-            <span>You connected your app successfully.</span>
+            <span>You connected your app to Appwrite Cloud successfully.</span>
           ) : status === "error" || status === "idle" ? (
-            <span>Send a ping to verify the connection</span>
+            <span>Send a ping to verify your Appwrite backend connectivity</span>
           ) : null}
         </p>
 
         <button
           onClick={sendPing}
-          className={`cursor-pointer rounded-md bg-[#FD366E] px-2.5 py-1.5 ${status === "loading" ? "hidden" : "visible"}`}
+          aria-label="Send a ping to Appwrite backend"
+          className={`cursor-pointer rounded-md bg-[#FD366E] px-3 py-2 transition-colors hover:bg-[#e02b60] focus:outline-none focus:ring-2 focus:ring-[#FD366E] focus:ring-offset-2 ${status === "loading" ? "hidden" : "visible"}`}
         >
-          <span className="text-white">Send a ping</span>
+          <span className="text-white font-medium">Send a ping</span>
         </button>
       </section>
 
