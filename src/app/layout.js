@@ -1,28 +1,32 @@
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL || "https://vikas-consult.pages.dev";
+const siteName =
+  process.env.NEXT_PUBLIC_SITE_NAME ||
+  process.env.NEXT_PUBLIC_APPWRITE_PROJECT_NAME ||
+  "Vikas";
 
 export const metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Vikas Consulting | Cloud Architecture & Appwrite Integration",
-    template: "%s | Vikas Consulting",
+    default: `${siteName} | Cloud Architecture & Appwrite Integration`,
+    template: `%s | ${siteName}`,
   },
   description:
-    "Enterprise-grade cloud consulting, full-stack solutions, and seamless Appwrite backend integration built on Next.js.",
+    `Enterprise-grade cloud consulting, full-stack solutions, and seamless Appwrite backend integration built on Next.js.`,
   keywords: [
     "Appwrite",
     "Next.js",
     "Cloud Consulting",
     "Web Architecture",
     "API Integration",
-    "Vikas Consulting",
+    siteName,
     "Serverless",
     "Jamstack",
     "Cloudflare Pages",
   ],
-  authors: [{ name: "Vikas" }],
-  creator: "Vikas",
-  publisher: "Vikas Consulting",
+  authors: [{ name: siteName }],
+  creator: siteName,
+  publisher: siteName,
   formatDetection: {
     email: false,
     address: false,
@@ -32,11 +36,11 @@ export const metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Vikas Consulting | Cloud Architecture & Appwrite Integration",
+    title: `${siteName} | Cloud Architecture & Appwrite Integration`,
     description:
-      "Enterprise-grade cloud consulting, full-stack solutions, and seamless Appwrite backend integration built on Next.js.",
+      `Enterprise-grade cloud consulting, full-stack solutions, and seamless Appwrite backend integration built on Next.js.`,
     url: siteUrl,
-    siteName: "Vikas Consulting",
+    siteName: siteName,
     images: [
       {
         url: "/appwrite.svg",
@@ -81,7 +85,7 @@ export default function RootLayout({ children }) {
       {
         "@type": "Organization",
         "@id": `${siteUrl}/#organization`,
-        name: "Vikas Consulting",
+        name: siteName,
         url: siteUrl,
         logo: `${siteUrl}/appwrite.svg`,
         sameAs: ["https://cloud.appwrite.io"],
@@ -90,7 +94,7 @@ export default function RootLayout({ children }) {
         "@type": "WebSite",
         "@id": `${siteUrl}/#website`,
         url: siteUrl,
-        name: "Vikas Consulting",
+        name: siteName,
         description:
           "Enterprise-grade cloud consulting and Appwrite backend integration.",
         publisher: {

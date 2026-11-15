@@ -11,77 +11,68 @@ import {
   Award,
   BookOpen,
   BriefcaseBusiness,
+  Building2,
+  Cloud,
   Code2,
   GraduationCap,
+  Layers,
   RefreshCw,
   Users,
   Wrench,
+  Zap,
 } from "lucide-react";
 import { triggerWebsiteRefresh } from "@/components/ui/InitialWebLoader";
 
 const navItems = [
   {
-    id: "portfolio",
-    label: "Portfolio",
+    id: "home",
+    label: "Home",
+    href: "/",
+  },
+  {
+    id: "services",
+    label: "Services",
     groups: [
       {
-        label: "About",
+        label: "Architecture & Engineering",
         links: [
           {
-            label: "Experience",
-            href: "#experience",
-            description: "Roles and experience across my career.",
-            icon: BriefcaseBusiness,
+            label: "Cloud Architecture",
+            href: "#cloud-architecture",
+            description: "Scalable multi-cloud and edge deployment systems.",
+            icon: Cloud,
           },
           {
-            label: "Education",
-            href: "#education",
-            description: "Academic background and learning.",
-            icon: GraduationCap,
+            label: "Full-Stack Development",
+            href: "#fullstack",
+            description: "High-performance Next.js web applications.",
+            icon: Code2,
           },
         ],
       },
       {
-        label: "Expertise",
+        label: "Integrations & Operations",
         links: [
           {
-            label: "Skills",
-            href: "#skills",
-            description: "Technologies and skills I work with.",
-            icon: Code2,
+            label: "Appwrite Backend",
+            href: "#appwrite-backend",
+            description: "Auth, database schemas, and serverless functions.",
+            icon: Zap,
           },
           {
-            label: "Certificates & Licenses",
-            href: "#certificates",
-            description: "Professional certifications and licenses I hold.",
-            icon: Award,
+            label: "DevOps & Cloudflare",
+            href: "#devops",
+            description: "CI/CD pipelines, edge caching, and security headers.",
+            icon: Wrench,
           },
         ],
       },
     ],
   },
   {
-    id: "work",
-    label: "Work",
-    groups: [
-      {
-        label: "Selected work",
-        links: [
-          {
-            label: "Projects",
-            href: "#projects",
-            description: "A selection of projects and experiments.",
-            icon: BriefcaseBusiness,
-          },
-          {
-            label: "Blog",
-            href: "/blog",
-            description: "Articles, notes, and ideas.",
-            icon: BookOpen,
-          },
-        ],
-      },
-    ],
+    id: "pricing",
+    label: "Pricing",
+    href: "#pricing",
   },
   {
     id: "tools",
@@ -91,10 +82,16 @@ const navItems = [
         label: "Utilities",
         links: [
           {
-            label: "Tools",
+            label: "Developer Tools",
             href: "/tools",
-            description: "Handy tools and utilities I've built and use.",
+            description: "Handy web utilities and automation scripts.",
             icon: Wrench,
+          },
+          {
+            label: "API Diagnostics",
+            href: "#diagnostics",
+            description: "Real-time backend ping and latency probes.",
+            icon: Layers,
           },
         ],
       },
@@ -108,26 +105,66 @@ const navItems = [
         label: "Explore",
         links: [
           {
-            label: "Resources",
+            label: "Documentation",
             href: "#resources",
-            description: "Useful resources and recommendations.",
+            description: "Implementation guides, tutorials, and docs.",
             icon: BookOpen,
+          },
+          {
+            label: "Certifications",
+            href: "#certificates",
+            description: "Professional credentials and verified badges.",
+            icon: Award,
           },
         ],
       },
     ],
   },
   {
-    id: "connect",
-    label: "Connect",
+    id: "blog",
+    label: "Blog",
+    href: "/blog",
+  },
+  {
+    id: "about",
+    label: "About",
     groups: [
       {
-        label: "Around the web",
+        label: "Company",
         links: [
           {
-            label: "Social",
-            href: "#social",
-            description: "Find me on social platforms.",
+            label: "Our Story",
+            href: "#about",
+            description: "Mission, engineering principles, and journey.",
+            icon: Building2,
+          },
+          {
+            label: "Experience",
+            href: "#experience",
+            description: "Track record across enterprise consulting.",
+            icon: BriefcaseBusiness,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "join-with-us",
+    label: "Join With Us",
+    groups: [
+      {
+        label: "Collaborate",
+        links: [
+          {
+            label: "Careers & Roles",
+            href: "#careers",
+            description: "Open developer, architect, and analyst positions.",
+            icon: BriefcaseBusiness,
+          },
+          {
+            label: "Partner Network",
+            href: "#partners",
+            description: "Strategic partnerships and affiliate collaborations.",
             icon: Users,
           },
         ],
@@ -361,7 +398,14 @@ export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
     });
   };
 
-  const roleName = user?.prefs?.role || "Authorized User";
+  const siteName =
+    process.env.NEXT_PUBLIC_SITE_NAME ||
+    process.env.NEXT_PUBLIC_APPWRITE_PROJECT_NAME ||
+    "Vikas";
+  const siteLogoUrl = process.env.NEXT_PUBLIC_SITE_LOGO_URL || "";
+  const siteLogoText =
+    process.env.NEXT_PUBLIC_SITE_LOGO_TEXT ||
+    (siteName ? siteName.charAt(0).toUpperCase() : "V");
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-xl transition-colors duration-200">
@@ -370,14 +414,22 @@ export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
         <div className="flex h-full items-center gap-8">
           <Link href="/" className="group flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-tr from-[#FF6D1B] via-[#E11D48] to-[#6B5FFF] p-0.5 shadow-sm transition-transform duration-200 group-hover:scale-105">
-              <div className="flex h-full w-full items-center justify-center rounded-full bg-card">
-                <span className="font-mono text-sm font-black text-foreground">
-                  V
-                </span>
+              <div className="flex h-full w-full items-center justify-center rounded-full bg-card overflow-hidden">
+                {siteLogoUrl ? (
+                  <img
+                    src={siteLogoUrl}
+                    alt={siteName}
+                    className="h-full w-full object-contain p-1"
+                  />
+                ) : (
+                  <span className="font-mono text-sm font-black text-foreground">
+                    {siteLogoText}
+                  </span>
+                )}
               </div>
             </div>
             <span className="text-base font-bold tracking-tight text-foreground group-hover:text-foreground/90">
-              Vikas
+              {siteName}
             </span>
           </Link>
 
@@ -391,6 +443,22 @@ export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
           >
             <ul className="flex h-full items-center gap-1 text-sm">
               {navItems.map((item) => {
+                if (item.href && !item.groups) {
+                  return (
+                    <li
+                      key={item.id}
+                      className="relative flex h-full items-center"
+                    >
+                      <Link
+                        href={item.href}
+                        className="flex cursor-pointer items-center gap-1 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors duration-150 hover:bg-secondary/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  );
+                }
+
                 const isOpen = openMenu === item.id;
                 const menuId = `${item.id}-mega-menu`;
 
@@ -519,12 +587,12 @@ export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
           </button>
 
           {loading ? (
-            <div className="h-8 w-20 animate-pulse rounded-full bg-muted" />
+            <div className="hidden md:block h-8 w-20 animate-pulse rounded-full bg-muted" />
           ) : user ? (
-            /* Logged-In: Blobatar avatar + dropdown */
+            /* Logged-In: Blobatar avatar + dropdown (desktop only, hidden on phone view) */
             <div
               ref={userMenuRef}
-              className="relative"
+              className="relative hidden md:block"
               onMouseEnter={cancelUserClose}
               onMouseLeave={closeUserSoon}
             >
@@ -535,12 +603,12 @@ export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
                 aria-haspopup="menu"
                 className="flex cursor-pointer items-center gap-2.5 rounded-full border border-border bg-secondary/80 p-1 pl-2 transition-all hover:border-foreground/20"
               >
-                <div className="hidden flex-col pr-1 text-right leading-tight sm:flex">
-                  <span className="text-xs font-semibold text-foreground">
+                <div
+                  className="hidden max-w-[110px] md:max-w-[130px] lg:max-w-[160px] pr-1 text-right sm:block"
+                  title={user.name}
+                >
+                  <span className="block truncate text-xs font-semibold text-foreground">
                     {user.name}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground">
-                    {roleName}
                   </span>
                 </div>
                 {/* Blobatar - deterministic avatar seeded by user name, animates on hover */}
@@ -556,8 +624,6 @@ export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
                       }}
                     />
                   </div>
-                  {/* Online indicator */}
-                  <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-emerald-500" />
                 </div>
               </button>
 
@@ -574,10 +640,16 @@ export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
                       />
                     </div>
                     <div className="flex min-w-0 flex-col">
-                      <p className="truncate text-xs font-semibold text-foreground">
+                      <p
+                        className="truncate text-xs font-semibold text-foreground"
+                        title={user.name}
+                      >
                         {user.name}
                       </p>
-                      <p className="truncate text-[11px] text-muted-foreground">
+                      <p
+                        className="truncate text-[11px] text-muted-foreground"
+                        title={user.email}
+                      >
                         {user.email}
                       </p>
                     </div>
@@ -690,6 +762,26 @@ export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
       >
         <nav aria-label="Mobile primary navigation" className="text-sm">
           {navItems.map((item) => {
+            if (item.href && !item.groups) {
+              return (
+                <div
+                  key={item.id}
+                  className="border-b border-border last:border-b-0 py-3"
+                >
+                  <Link
+                    href={item.href}
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      setOpenMobileSection(null);
+                    }}
+                    className="block text-sm font-medium text-foreground hover:text-primary transition-colors"
+                  >
+                    {item.label}
+                  </Link>
+                </div>
+              );
+            }
+
             const isOpen = openMobileSection === item.id;
             const sectionId = `mobile-${item.id}-links`;
 
@@ -769,8 +861,31 @@ export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
             );
           })}
         </nav>
-        <div className="border-t border-border pt-2">
-          {user ? (
+        {user && (
+          <div className="border-t border-border pt-3">
+            <div className="mb-3 flex items-center gap-3 rounded-xl border border-border bg-card p-2.5">
+              <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-full border border-border">
+                <Blobatar
+                  name={avatarSeed ?? user.name}
+                  animate="hover"
+                  style={{ width: "100%", height: "100%" }}
+                />
+              </div>
+              <div className="flex min-w-0 flex-col">
+                <p
+                  className="truncate text-xs font-semibold text-foreground"
+                  title={user.name}
+                >
+                  {user.name}
+                </p>
+                <p
+                  className="truncate text-[11px] text-muted-foreground"
+                  title={user.email}
+                >
+                  {user.email}
+                </p>
+              </div>
+            </div>
             <button
               type="button"
               onClick={handleLogout}
@@ -779,20 +894,8 @@ export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
             >
               {isPending ? "Signing out…" : "Sign Out"}
             </button>
-          ) : (
-            <AuthModal
-              onAuthSuccess={handleAuthSuccess}
-              trigger={
-                <button
-                  type="button"
-                  className="block w-full cursor-pointer rounded-full border border-border bg-secondary py-2 text-center text-xs text-foreground hover:bg-secondary/80"
-                >
-                  Login
-                </button>
-              }
-            />
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </header>
   );
