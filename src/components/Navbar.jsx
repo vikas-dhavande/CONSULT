@@ -1,0 +1,801 @@
+"use client";
+
+import React, { useState, useEffect, useRef, useTransition } from "react";
+import Link from "next/link";
+import { Blobatar } from "@blobatar/react";
+import { account } from "@/lib/appwrite";
+import { clearCookieAction } from "@/app/actions";
+import { ThemeToggleButton } from "@/components/ui/ThemeToggleButton";
+import { AuthModal } from "@/components/ui/AuthModal";
+import {
+  Award,
+  BookOpen,
+  BriefcaseBusiness,
+  Code2,
+  GraduationCap,
+  RefreshCw,
+  Users,
+  Wrench,
+} from "lucide-react";
+import { triggerWebsiteRefresh } from "@/components/ui/InitialWebLoader";
+
+const navItems = [
+  {
+    id: "portfolio",
+    label: "Portfolio",
+    groups: [
+      {
+        label: "About",
+        links: [
+          {
+            label: "Experience",
+            href: "#experience",
+            description: "Roles and experience across my career.",
+            icon: BriefcaseBusiness,
+          },
+          {
+            label: "Education",
+            href: "#education",
+            description: "Academic background and learning.",
+            icon: GraduationCap,
+          },
+        ],
+      },
+      {
+        label: "Expertise",
+        links: [
+          {
+            label: "Skills",
+            href: "#skills",
+            description: "Technologies and skills I work with.",
+            icon: Code2,
+          },
+          {
+            label: "Certificates & Licenses",
+            href: "#certificates",
+            description: "Professional certifications and licenses I hold.",
+            icon: Award,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "work",
+    label: "Work",
+    groups: [
+      {
+        label: "Selected work",
+        links: [
+          {
+            label: "Projects",
+            href: "#projects",
+            description: "A selection of projects and experiments.",
+            icon: BriefcaseBusiness,
+          },
+          {
+            label: "Blog",
+            href: "/blog",
+            description: "Articles, notes, and ideas.",
+            icon: BookOpen,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "tools",
+    label: "Tools",
+    groups: [
+      {
+        label: "Utilities",
+        links: [
+          {
+            label: "Tools",
+            href: "/tools",
+            description: "Handy tools and utilities I've built and use.",
+            icon: Wrench,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "resources",
+    label: "Resources",
+    groups: [
+      {
+        label: "Explore",
+        links: [
+          {
+            label: "Resources",
+            href: "#resources",
+            description: "Useful resources and recommendations.",
+            icon: BookOpen,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "connect",
+    label: "Connect",
+    groups: [
+      {
+        label: "Around the web",
+        links: [
+          {
+            label: "Social",
+            href: "#social",
+            description: "Find me on social platforms.",
+            icon: Users,
+          },
+        ],
+      },
+    ],
+  },
+];
+
+export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
+  const [user, setUser] = useState(initialUser);
+
+  // Avatar seed: cookie (SSR) > localStorage > null
+  const [avatarSeed, setAvatarSeed] = useState(() => {
+    if (initialAvatarSeed) return initialAvatarSeed;
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("avatar_seed");
+    }
+    return null;
+  });
+
+  const [loading, setLoading] = useState(!initialUser);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [openMenu, setOpenMenu] = useState(null);
+  const [openMobileSection, setOpenMobileSection] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const desktopNavRef = useRef(null);
+  const menuTriggerRefs = useRef({});
+  const mobileToggleRef = useRef(null);
+
+  // Hover intent: small delay before closing so diagonal mouse moves don't kill the menu
+  const closeTimer = useRef(null);
+
+  const cancelClose = () => {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+  };
+
+  const openNow = (id) => {
+    cancelClose();
+    setOpenMenu(id);
+  };
+
+  const closeSoon = () => {
+    cancelClose();
+    closeTimer.current = setTimeout(() => setOpenMenu(null), 150);
+  };
+
+  const closeNow = () => {
+    cancelClose();
+    setOpenMenu(null);
+  };
+
+  useEffect(() => {
+    return () => cancelClose();
+  }, []);
+
+  // User dropdown: close on outside click, Escape, or when the mouse moves away
+  const userMenuRef = useRef(null);
+  const userCloseTimer = useRef(null);
+
+  const cancelUserClose = () => {
+    if (userCloseTimer.current) {
+      clearTimeout(userCloseTimer.current);
+      userCloseTimer.current = null;
+    }
+  };
+
+  const closeUserSoon = () => {
+    cancelUserClose();
+    userCloseTimer.current = setTimeout(() => setDropdownOpen(false), 250);
+  };
+
+  useEffect(() => {
+    if (!dropdownOpen) return;
+
+    const onPointerDown = (event) => {
+      if (!userMenuRef.current?.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") setDropdownOpen(false);
+    };
+
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      cancelUserClose();
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [dropdownOpen]);
+
+  useEffect(() => {
+    const handlePointerDown = (event) => {
+      if (!desktopNavRef.current?.contains(event.target)) {
+        closeNow();
+      }
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key !== "Escape") return;
+
+      if (mobileMenuOpen) {
+        setMobileMenuOpen(false);
+        setOpenMobileSection(null);
+        mobileToggleRef.current?.focus();
+      }
+
+      if (openMenu) {
+        closeNow();
+        menuTriggerRefs.current[openMenu]?.focus();
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mobileMenuOpen, openMenu]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await triggerWebsiteRefresh("Refreshing Animations & Pipeline…");
+    setTimeout(() => setRefreshing(false), 800);
+  };
+
+  useEffect(() => {
+    if (initialUser) {
+      setLoading(false);
+      return;
+    }
+
+    // Only query Appwrite if there is an existing session token/cookie/local cache
+    // to avoid logging 401 errors to the browser console for guest visitors
+    const hasCachedUser =
+      typeof window !== "undefined" && !!localStorage.getItem("auth_user");
+    const hasAuthCookie =
+      typeof document !== "undefined" && document.cookie.includes("auth_user");
+
+    if (
+      (hasCachedUser || hasAuthCookie) &&
+      account &&
+      typeof account.get === "function"
+    ) {
+      account
+        .get()
+        .then((u) => {
+          setUser(u);
+          // Sync avatar seed from localStorage if not already set via cookie
+          const stored = localStorage.getItem("avatar_seed");
+          if (stored && !avatarSeed) setAvatarSeed(stored);
+        })
+        .catch(() => setUser(null))
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+
+    // Auto-sync session when tab receives focus (e.g. after popup or external auth)
+    const syncSession = () => {
+      account
+        .get()
+        .then((u) => {
+          setUser(u);
+          const stored = localStorage.getItem("avatar_seed");
+          if (stored) setAvatarSeed(stored);
+        })
+        .catch(() => setUser(null));
+    };
+
+    const handleFocus = () => {
+      const hasSession =
+        (typeof window !== "undefined" && !!localStorage.getItem("auth_user")) ||
+        (typeof document !== "undefined" &&
+          document.cookie.includes("auth_user"));
+      if (hasSession && account && typeof account.get === "function") {
+        syncSession();
+      }
+    };
+
+    const handleAuthChanged = () => syncSession();
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("appwrite-auth-changed", handleAuthChanged);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("appwrite-auth-changed", handleAuthChanged);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialUser]);
+
+  const refreshUser = () => {
+    if (account && typeof account.get === "function") {
+      account
+        .get()
+        .then((u) => setUser(u))
+        .catch(() => setUser(null));
+    }
+  };
+
+  const handleAuthSuccess = (userName) => {
+    setAvatarSeed(userName);
+    refreshUser();
+  };
+
+  const handleLogout = () => {
+    startTransition(async () => {
+      try {
+        if (account && typeof account.deleteSession === "function") {
+          await account.deleteSession("current");
+        }
+      } catch {}
+
+      try {
+        localStorage.removeItem("auth_user");
+        localStorage.removeItem("avatar_seed");
+      } catch {}
+
+      await clearCookieAction("auth_user");
+      await clearCookieAction("avatar_seed");
+
+      setUser(null);
+      setAvatarSeed(null);
+      setDropdownOpen(false);
+    });
+  };
+
+  const roleName = user?.prefs?.role || "Authorized User";
+
+  return (
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-xl transition-colors duration-200">
+      <div className="flex h-14 w-full items-center justify-between px-4 lg:px-8">
+        {/* Brand / Logo */}
+        <div className="flex h-full items-center gap-8">
+          <Link href="/" className="group flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-tr from-[#FF6D1B] via-[#E11D48] to-[#6B5FFF] p-0.5 shadow-sm transition-transform duration-200 group-hover:scale-105">
+              <div className="flex h-full w-full items-center justify-center rounded-full bg-card">
+                <span className="font-mono text-sm font-black text-foreground">
+                  V
+                </span>
+              </div>
+            </div>
+            <span className="text-base font-bold tracking-tight text-foreground group-hover:text-foreground/90">
+              Vikas
+            </span>
+          </Link>
+
+          {/* Desktop Mega Menu */}
+          <nav
+            ref={desktopNavRef}
+            aria-label="Primary navigation"
+            className="relative hidden h-14 items-center md:flex"
+            onMouseEnter={cancelClose}
+            onMouseLeave={closeSoon}
+          >
+            <ul className="flex h-full items-center gap-1 text-sm">
+              {navItems.map((item) => {
+                const isOpen = openMenu === item.id;
+                const menuId = `${item.id}-mega-menu`;
+
+                return (
+                  <li
+                    key={item.id}
+                    className="relative flex h-full items-center"
+                    onMouseEnter={() => openNow(item.id)}
+                  >
+                    <button
+                      id={`${item.id}-trigger`}
+                      ref={(element) => {
+                        menuTriggerRefs.current[item.id] = element;
+                      }}
+                      type="button"
+                      aria-expanded={isOpen}
+                      aria-controls={menuId}
+                      onClick={() => openNow(item.id)}
+                      className={`flex cursor-pointer items-center gap-1 rounded-lg px-3 py-2 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                        isOpen
+                          ? "bg-secondary text-foreground"
+                          : "text-muted-foreground hover:bg-secondary/70 hover:text-foreground"
+                      }`}
+                    >
+                      {item.label}
+                      <svg
+                        aria-hidden="true"
+                        className={`h-3.5 w-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                        viewBox="0 0 20 20"
+                        fill="none"
+                      >
+                        <path
+                          d="m5 7.5 5 5 5-5"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+
+                    <div
+                      id={menuId}
+                      aria-labelledby={`${item.id}-trigger`}
+                      hidden={!isOpen}
+                      className={`absolute left-0 top-full z-50 max-w-[calc(100vw-2rem)] ${
+                        item.groups.length > 1 ? "w-[34rem]" : "w-80"
+                      }`}
+                    >
+                      <div
+                        className={`grid gap-6 rounded-b-2xl rounded-t-none border border-t-0 border-border bg-card p-5 shadow-2xl ${
+                          item.groups.length > 1 ? "grid-cols-2" : "grid-cols-1"
+                        }`}
+                        onMouseEnter={cancelClose}
+                      >
+                        {item.groups.map((group) => (
+                          <section key={group.label} aria-label={group.label}>
+                            <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                              {group.label}
+                            </h2>
+                            <ul className="space-y-1">
+                              {group.links.map((link) => {
+                                const Icon = link.icon;
+                                return (
+                                  <li key={link.href}>
+                                    <Link
+                                      href={link.href}
+                                      onClick={closeNow}
+                                      className="group flex items-start gap-3 rounded-xl p-3 transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    >
+                                      {Icon ? (
+                                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-colors group-hover:text-foreground">
+                                          <Icon
+                                            aria-hidden="true"
+                                            className="h-4 w-4"
+                                          />
+                                        </span>
+                                      ) : null}
+                                      <span className="min-w-0">
+                                        <span className="block text-sm font-medium text-foreground">
+                                          {link.label}
+                                        </span>
+                                        {link.description ? (
+                                          <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
+                                            {link.description}
+                                          </span>
+                                        ) : null}
+                                      </span>
+                                    </Link>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </section>
+                        ))}
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+        </div>
+
+        {/* Right Section */}
+        <div className="flex items-center gap-3">
+          {/* Theme Toggle */}
+          <ThemeToggleButton />
+
+          {/* Quick Animation & API Refresh Trigger */}
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            title="Refresh animation pipeline & API cache"
+            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-border bg-secondary/80 text-muted-foreground transition-all duration-150 hover:border-foreground/20 hover:bg-muted hover:text-foreground disabled:opacity-50"
+            aria-label="Refresh animation rendering and API cache"
+          >
+            <RefreshCw
+              className={`h-3.5 w-3.5 transition-transform duration-300 ${
+                refreshing
+                  ? "animate-spin text-[#E11D48]"
+                  : "group-hover:rotate-180"
+              }`}
+            />
+          </button>
+
+          {loading ? (
+            <div className="h-8 w-20 animate-pulse rounded-full bg-muted" />
+          ) : user ? (
+            /* Logged-In: Blobatar avatar + dropdown */
+            <div
+              ref={userMenuRef}
+              className="relative"
+              onMouseEnter={cancelUserClose}
+              onMouseLeave={closeUserSoon}
+            >
+              <button
+                type="button"
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                aria-expanded={dropdownOpen}
+                aria-haspopup="menu"
+                className="flex cursor-pointer items-center gap-2.5 rounded-full border border-border bg-secondary/80 p-1 pl-2 transition-all hover:border-foreground/20"
+              >
+                <div className="hidden flex-col pr-1 text-right leading-tight sm:flex">
+                  <span className="text-xs font-semibold text-foreground">
+                    {user.name}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {roleName}
+                  </span>
+                </div>
+                {/* Blobatar - deterministic avatar seeded by user name, animates on hover */}
+                <div className="relative h-8 w-8 flex-shrink-0">
+                  <div className="h-full w-full overflow-hidden rounded-full">
+                    <Blobatar
+                      name={avatarSeed ?? user.name}
+                      animate="hover"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        display: "block",
+                      }}
+                    />
+                  </div>
+                  {/* Online indicator */}
+                  <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-emerald-500" />
+                </div>
+              </button>
+
+              {/* User Dropdown */}
+              {dropdownOpen && (
+                <div className="absolute right-0 z-50 mt-2 w-56 animate-in fade-in zoom-in-95 rounded-2xl border border-border bg-card p-2 shadow-2xl backdrop-blur-xl">
+                  {/* User info header */}
+                  <div className="mb-1 flex items-center gap-3 border-b border-border px-3 py-2">
+                    <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-full border border-border">
+                      <Blobatar
+                        name={avatarSeed ?? user.name}
+                        animate="hover"
+                        style={{ width: "100%", height: "100%" }}
+                      />
+                    </div>
+                    <div className="flex min-w-0 flex-col">
+                      <p className="truncate text-xs font-semibold text-foreground">
+                        {user.name}
+                      </p>
+                      <p className="truncate text-[11px] text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
+                    <Link
+                      href="/dashboard"
+                      className="rounded-lg px-3 py-2 transition-colors hover:bg-secondary hover:text-foreground"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      Dashboard
+                    </Link>
+                    <Link
+                      href="/profile"
+                      className="rounded-lg px-3 py-2 transition-colors hover:bg-secondary hover:text-foreground"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      Profile &amp; Account
+                    </Link>
+                    <a
+                      href="#settings"
+                      className="rounded-lg px-3 py-2 transition-colors hover:bg-secondary hover:text-foreground"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      Workspace Settings
+                    </a>
+                    <a
+                      href="#billing"
+                      className="rounded-lg px-3 py-2 transition-colors hover:bg-secondary hover:text-foreground"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      Billing &amp; Subscription
+                    </a>
+                  </div>
+                  <div className="mt-1 border-t border-border pt-1">
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      disabled={isPending}
+                      className="w-full cursor-pointer rounded-lg px-3 py-2 text-left text-xs font-medium text-[#E11D48] transition-colors hover:bg-[#E11D48]/10 disabled:opacity-50"
+                    >
+                      {isPending ? "Signing out…" : "Sign Out"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Logged-Out: Auth Modal trigger */
+            <div className="flex items-center gap-2 sm:gap-3">
+              <AuthModal
+                onAuthSuccess={handleAuthSuccess}
+                trigger={
+                  <button
+                    type="button"
+                    className="cursor-pointer rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm transition-all hover:opacity-90"
+                  >
+                    Login
+                  </button>
+                }
+              />
+            </div>
+          )}
+
+          {/* Mobile Hamburger */}
+          <button
+            ref={mobileToggleRef}
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label={
+              mobileMenuOpen
+                ? "Close navigation menu"
+                : "Open navigation menu"
+            }
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation"
+            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-border text-muted-foreground hover:text-foreground md:hidden"
+          >
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              {mobileMenuOpen ? (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              ) : (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              )}
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Drawer */}
+      <div
+        id="mobile-navigation"
+        hidden={!mobileMenuOpen}
+        className="space-y-3 border-t border-border bg-background px-4 py-4 md:hidden"
+      >
+        <nav aria-label="Mobile primary navigation" className="text-sm">
+          {navItems.map((item) => {
+            const isOpen = openMobileSection === item.id;
+            const sectionId = `mobile-${item.id}-links`;
+
+            return (
+              <section
+                key={item.id}
+                className="border-b border-border last:border-b-0"
+              >
+                <h2>
+                  <button
+                    type="button"
+                    aria-expanded={isOpen}
+                    aria-controls={sectionId}
+                    onClick={() =>
+                      setOpenMobileSection(isOpen ? null : item.id)
+                    }
+                    className="flex w-full cursor-pointer items-center justify-between py-3 text-left font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {item.label}
+                    <svg
+                      aria-hidden="true"
+                      className={`h-4 w-4 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`}
+                      viewBox="0 0 20 20"
+                      fill="none"
+                    >
+                      <path
+                        d="m5 7.5 5 5 5-5"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </h2>
+                <div id={sectionId} hidden={!isOpen} className="pb-3 pl-2">
+                  {item.groups.map((group) => (
+                    <div key={group.label} className="pb-3 last:pb-0">
+                      <h3 className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        {group.label}
+                      </h3>
+                      {group.links.map((link) => {
+                        const Icon = link.icon;
+                        return (
+                          <Link
+                            key={link.href}
+                            href={link.href}
+                            onClick={() => {
+                              setMobileMenuOpen(false);
+                              setOpenMobileSection(null);
+                            }}
+                            className="flex items-center gap-3 rounded-lg px-2 py-2.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            {Icon ? (
+                              <Icon
+                                aria-hidden="true"
+                                className="h-4 w-4 shrink-0"
+                              />
+                            ) : null}
+                            <span>
+                              <span className="block text-sm font-medium text-foreground">
+                                {link.label}
+                              </span>
+                              {link.description ? (
+                                <span className="mt-0.5 block text-xs text-muted-foreground">
+                                  {link.description}
+                                </span>
+                              ) : null}
+                            </span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            );
+          })}
+        </nav>
+        <div className="border-t border-border pt-2">
+          {user ? (
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={isPending}
+              className="w-full cursor-pointer rounded-full border border-destructive/40 py-2 text-center text-xs text-destructive hover:bg-destructive/10 disabled:opacity-50"
+            >
+              {isPending ? "Signing out…" : "Sign Out"}
+            </button>
+          ) : (
+            <AuthModal
+              onAuthSuccess={handleAuthSuccess}
+              trigger={
+                <button
+                  type="button"
+                  className="block w-full cursor-pointer rounded-full border border-border bg-secondary py-2 text-center text-xs text-foreground hover:bg-secondary/80"
+                >
+                  Login
+                </button>
+              }
+            />
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}
+
+export default Navbar;
