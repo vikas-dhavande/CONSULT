@@ -1,6 +1,4 @@
 import HeroSection from "@/components/ui/hero-01-utils/hero";
-import type { NavigationSection } from "@/components/ui/hero-01-utils/header";
-import Header from "@/components/ui/hero-01-utils/header";
 import BrandSlider, {
   BrandList,
 } from "@/components/ui/hero-01-utils/brand-slider";
@@ -11,34 +9,6 @@ export const defaultAvatarList: AvatarList[] = [
   { name: "Sarah" },
   { name: "Alexander" },
   { name: "Elena" },
-];
-
-export const defaultNavigationData: NavigationSection[] = [
-  {
-    title: "Home",
-    href: "#",
-    isActive: true,
-  },
-  {
-    title: "About us",
-    href: "#",
-  },
-  {
-    title: "Services",
-    href: "#",
-  },
-  {
-    title: "Team",
-    href: "#",
-  },
-  {
-    title: "Pricing",
-    href: "#",
-  },
-  {
-    title: "Awards",
-    href: "#",
-  },
 ];
 
 export const defaultBrandList: BrandList[] = [
@@ -71,20 +41,15 @@ export const defaultBrandList: BrandList[] = [
 
 export default function AgencyHeroSection({
   avatarList = defaultAvatarList,
-  navigationData = defaultNavigationData,
   brandList = defaultBrandList,
 }: {
   avatarList?: AvatarList[];
-  navigationData?: NavigationSection[];
   brandList?: BrandList[];
 } = {}) {
   return (
     <div className="relative">
-      <Header navigationData={navigationData} />
-      <main>
-        <HeroSection avatarList={avatarList} />
-        <BrandSlider brandList={brandList} />
-      </main>
+      <HeroSection avatarList={avatarList} />
+      <BrandSlider brandList={brandList} />
     </div>
   );
 }

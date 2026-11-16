@@ -537,7 +537,7 @@ export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
                               {group.links.map((link) => {
                                 const Icon = link.icon;
                                 return (
-                                  <li key={link.href}>
+                                  <li key={`${group.label}-${link.label}`}>
                                     <Link
                                       href={link.href}
                                       onClick={closeNow}
@@ -764,7 +764,7 @@ export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
                         const Icon = link.icon;
                         return (
                           <Link
-                            key={link.href}
+                            key={`${group.label}-${link.label}`}
                             href={link.href}
                             onClick={() => {
                               setMobileMenuOpen(false);

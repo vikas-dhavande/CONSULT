@@ -35,23 +35,12 @@ function HeroSection({
     <section className="relative overflow-hidden">
       <div className="w-full h-full relative">
         {/* Soft background ambient gradient */}
-        <div className="relative w-full pt-8 md:pt-16 pb-8 md:pb-14 before:absolute before:w-full before:h-full before:bg-linear-to-r before:from-sky-100 before:via-white before:to-amber-100 before:rounded-full before:top-24 before:blur-3xl before:-z-10 dark:before:from-slate-800 dark:before:via-black dark:before:to-stone-700 dark:before:rounded-full dark:before:blur-3xl dark:before:-z-10">
+        <div className="relative w-full pt-3 md:pt-6 pb-6 md:pb-10 before:absolute before:w-full before:h-full before:bg-linear-to-r before:from-sky-100 before:via-white before:to-amber-100 before:rounded-full before:top-24 before:blur-3xl before:-z-10 dark:before:from-slate-800 dark:before:via-black dark:before:to-stone-700 dark:before:rounded-full dark:before:blur-3xl dark:before:-z-10">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center max-w-7xl mx-auto">
               
               {/* Left Column: Text & CTAs */}
-              <div className="lg:col-span-7 flex flex-col items-start text-left gap-6">
-                
-                {/* Eyebrow Pill */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, ease: "easeInOut" }}
-                  className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-secondary/80 px-3.5 py-1 text-xs font-medium text-foreground shadow-xs backdrop-blur-sm"
-                >
-                  <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>Next-Gen Cloud Architecture &amp; Appwrite Integration</span>
-                </motion.div>
+              <div className="lg:col-span-7 flex flex-col items-start text-left gap-5">
 
                 {/* Main Headline */}
                 <motion.h1
