@@ -1,16 +1,10 @@
 "use client";
 
-import { Instrument_Serif } from "next/font/google";
 import { Button } from "@/components/ui/button";
 import { motion } from "motion/react";
 import { ArrowUpRight } from "lucide-react";
 import { Blobatar } from "@blobatar/react";
-
-const instrumentSerif = Instrument_Serif({
-  subsets: ["latin"],
-  weight: ["400"],
-  style: ["italic"],
-});
+import CostLeversChart from "@/components/CostLeversChart";
 
 export type AvatarList = {
   image?: string;
@@ -19,7 +13,6 @@ export type AvatarList = {
 
 type HeroSectionProps = {
   avatarList?: AvatarList[];
-  heroImage?: string;
 };
 
 function HeroSection({
@@ -29,18 +22,16 @@ function HeroSection({
     { name: "Alexander" },
     { name: "Elena" },
   ],
-  heroImage = "/images/hero-consulting.svg",
 }: HeroSectionProps) {
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative overflow-hidden bg-background">
       <div className="w-full h-full relative">
-        {/* Soft background ambient gradient */}
-        <div className="relative w-full pt-3 md:pt-6 pb-6 md:pb-10 before:absolute before:w-full before:h-full before:bg-linear-to-r before:from-sky-100 before:via-white before:to-amber-100 before:rounded-full before:top-24 before:blur-3xl before:-z-10 dark:before:from-slate-800 dark:before:via-black dark:before:to-stone-700 dark:before:rounded-full dark:before:blur-3xl dark:before:-z-10">
+        <div className="relative w-full pt-3 md:pt-6 pb-6 md:pb-10">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center max-w-7xl mx-auto">
               
               {/* Left Column: Text & CTAs */}
-              <div className="lg:col-span-7 flex flex-col items-start text-left gap-5">
+              <div className="lg:col-span-6 flex flex-col items-start text-left gap-5">
 
                 {/* Main Headline */}
                 <motion.h1
@@ -51,7 +42,7 @@ function HeroSection({
                 >
                   Building bold brands with{" "}
                   <span
-                    className={`${instrumentSerif.className} italic font-normal tracking-normal text-primary`}
+                    className="font-serif italic font-normal tracking-normal text-primary"
                   >
                     thoughtful design
                   </span>
@@ -150,52 +141,15 @@ function HeroSection({
 
               </div>
 
-              {/* Right Column: Hero Visual Image / Showcase */}
-              <div className="lg:col-span-5 relative flex items-center justify-center w-full">
+              {/* Right Column: Hero Visual / Cost Levers Chart (No border, no box) */}
+              <div className="lg:col-span-6 relative flex items-center justify-center w-full">
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95, y: 32 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   transition={{ duration: 0.9, delay: 0.2, ease: "easeInOut" }}
-                  className="relative w-full max-w-lg lg:max-w-none"
+                  className="w-full max-w-2xl flex items-center justify-center"
                 >
-                  {/* Ambient Glow */}
-                  <div className="absolute -inset-1.5 rounded-3xl bg-gradient-to-tr from-[#FF6D1B]/30 via-[#E11D48]/30 to-[#6B5FFF]/30 opacity-70 blur-2xl -z-10 dark:opacity-50" />
-
-                  {/* Visual container */}
-                  <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-card/60 backdrop-blur-xl shadow-2xl transition-all duration-300 hover:shadow-primary/10">
-                    <img
-                      src={heroImage}
-                      alt="Agency Consulting & Cloud Architecture"
-                      className="w-full h-auto max-h-[480px] object-cover rounded-2xl"
-                    />
-
-                    {/* Floating Stat Badge 1 (Bottom Left) */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.8, delay: 0.5 }}
-                      className="absolute bottom-4 left-4 rounded-xl border border-border/80 bg-background/90 p-2.5 sm:p-3 shadow-lg backdrop-blur-md flex items-center gap-3"
-                    >
-                      <div className="flex size-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold text-xs sm:text-sm">
-                        99.9%
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold text-foreground">Cloud Reliability</p>
-                        <p className="text-[11px] text-muted-foreground">Production ready</p>
-                      </div>
-                    </motion.div>
-
-                    {/* Floating Stat Badge 2 (Top Right) */}
-                    <motion.div
-                      initial={{ opacity: 0, y: -20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.8, delay: 0.6 }}
-                      className="absolute top-4 right-4 rounded-xl border border-border/80 bg-background/90 p-2 px-3 sm:px-3.5 shadow-lg backdrop-blur-md flex items-center gap-2"
-                    >
-                      <span className="flex size-2 rounded-full bg-primary animate-ping" />
-                      <span className="text-xs font-semibold text-foreground">Appwrite Powered</span>
-                    </motion.div>
-                  </div>
+                  <CostLeversChart />
                 </motion.div>
               </div>
 
