@@ -13,6 +13,23 @@ export default function AuthCallbackPage() {
 
     async function handleCallback() {
       try {
+        if (typeof window !== "undefined") {
+          const urlParams = new URLSearchParams(window.location.search);
+          const errorParam = urlParams.get("error");
+          const errorMsg = urlParams.get("message");
+          if (errorParam) {
+            throw new Error(errorMsg || `Authentication error: ${errorParam}`);
+          }
+
+          const userId = urlParams.get("userId");
+          const secret = urlParams.get("secret");
+
+          // If token-based OAuth parameters are present, exchange for session
+          if (userId && secret) {
+            await account.createSession(userId, secret);
+          }
+        }
+
         const user = await account.get();
         if (!mounted) return;
 

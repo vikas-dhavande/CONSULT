@@ -32,20 +32,33 @@ export function LoginForm({
   const [oauthLoading, setOauthLoading] = useState(null); // 'google' | 'github' | 'linkedin'
   const [error, setError] = useState(null);
 
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const oauthErr = params.get("error");
+      if (oauthErr === "oauth_failed") {
+        setError("OAuth authentication was cancelled or failed. Please try again.");
+      }
+    }
+  }, []);
+
   const handleOAuthLogin = async (provider) => {
     setError(null);
     setOauthLoading(provider);
 
     try {
-      const isLocalhost =
-        typeof window !== "undefined" &&
-        (window.location.hostname === "localhost" ||
-          window.location.hostname === "127.0.0.1");
+      if (provider === OAuthProvider.Linkedin) {
+        setError(
+          "LinkedIn sign-in is currently pending configuration in the Appwrite Console. Please use Google or GitHub to log in."
+        );
+        setOauthLoading(null);
+        return;
+      }
 
-      const baseUrl = isLocalhost
-        ? window.location.origin
-        : (process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-          (typeof window !== "undefined" ? window.location.origin : ""));
+      const baseUrl =
+        typeof window !== "undefined"
+          ? window.location.origin
+          : (process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "");
 
       const successPath =
         process.env.NEXT_PUBLIC_OAUTH_SUCCESS_CALLBACK || "/auth/callback";
@@ -56,8 +69,12 @@ export function LoginForm({
       const successUrl = `${baseUrl}${successPath.startsWith("/") ? "" : "/"}${successPath}`;
       const failureUrl = `${baseUrl}${failurePath.startsWith("/") ? "" : "/"}${failurePath}`;
 
-      // Appwrite Web SDK OAuth Session redirect
-      account.createOAuth2Session(provider, successUrl, failureUrl);
+      // Use token-based OAuth to bypass third-party cookie restrictions across modern browsers
+      if (typeof account.createOAuth2Token === "function") {
+        account.createOAuth2Token(provider, successUrl, failureUrl);
+      } else {
+        account.createOAuth2Session(provider, successUrl, failureUrl);
+      }
     } catch (err) {
       setError(err?.message || `Failed to initialize ${provider} login.`);
       setOauthLoading(null);
@@ -259,8 +276,8 @@ export function LoginForm({
                   type="button"
                   disabled={loading || !!oauthLoading}
                   onClick={() => handleOAuthLogin(OAuthProvider.Linkedin)}
-                  className="cursor-pointer h-9 w-full flex items-center justify-center hover:bg-secondary transition-colors"
-                  title="Sign in with LinkedIn"
+                  className="cursor-pointer h-9 w-full flex items-center justify-center hover:bg-secondary transition-colors opacity-80 hover:opacity-100"
+                  title="Sign in with LinkedIn (Pending Appwrite setup)"
                 >
                   {oauthLoading === "linkedin" ? (
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
