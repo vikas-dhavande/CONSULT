@@ -272,19 +272,19 @@ export function ChatBubble() {
                     placeholder="Your work email *"
                     value={userEmail}
                     onChange={(e) => setUserEmail(e.target.value)}
-                    className="w-full px-2.5 py-1 rounded-md border border-border bg-background text-foreground text-[11px] focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full px-2.5 py-1.5 rounded-md border border-border bg-background text-foreground text-base sm:text-xs focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                   <input
                     type="text"
                     placeholder="Your name (optional)"
                     value={userName}
                     onChange={(e) => setUserName(e.target.value)}
-                    className="w-full px-2.5 py-1 rounded-md border border-border bg-background text-foreground text-[11px] focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full px-2.5 py-1.5 rounded-md border border-border bg-background text-foreground text-base sm:text-xs focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full py-1.5 rounded-md bg-primary text-primary-foreground font-semibold text-[11px] hover:opacity-90 transition disabled:opacity-50 cursor-pointer"
+                    className="w-full py-2.5 rounded-md bg-primary text-primary-foreground font-semibold text-xs min-h-[44px] hover:opacity-90 transition disabled:opacity-50 cursor-pointer"
                   >
                     {isSubmitting ? "Saving..." : "Submit Inquiry"}
                   </button>
@@ -307,15 +307,15 @@ export function ChatBubble() {
                 placeholder="Type your question..."
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                className="flex-1 px-3 py-1.5 rounded-full border border-border bg-background text-foreground text-[11px] focus:outline-none focus:ring-1.5 focus:ring-primary/40"
+                className="flex-1 px-3 py-1.5 rounded-full border border-border bg-background text-foreground text-base sm:text-xs focus:outline-none focus:ring-1.5 focus:ring-primary/40"
               />
               <button
                 type="submit"
                 disabled={!inputText.trim()}
-                className="size-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition disabled:opacity-40 cursor-pointer shrink-0 shadow-xs"
+                className="size-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition disabled:opacity-40 cursor-pointer shrink-0 shadow-xs min-w-[36px] min-h-[36px]"
                 aria-label="Send message"
               >
-                <Send className="size-3" />
+                <Send className="size-3.5" />
               </button>
             </form>
           </motion.div>

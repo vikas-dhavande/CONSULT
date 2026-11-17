@@ -578,7 +578,7 @@ export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
         </div>
 
         {/* Right Section */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           {/* Theme Toggle */}
           <ThemeToggleButton />
 
@@ -588,7 +588,7 @@ export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
             onClick={handleRefresh}
             disabled={refreshing}
             title="Refresh animation pipeline & API cache"
-            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-border bg-secondary/80 text-muted-foreground transition-all duration-150 hover:border-foreground/20 hover:bg-muted hover:text-foreground disabled:opacity-50"
+            className="flex h-9 w-9 sm:h-8 sm:w-8 cursor-pointer items-center justify-center rounded-full border border-border bg-secondary/80 text-muted-foreground transition-all duration-150 hover:border-foreground/20 hover:bg-muted hover:text-foreground disabled:opacity-50"
             aria-label="Refresh animation rendering and API cache"
           >
             <RefreshCw
@@ -635,8 +635,8 @@ export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
               />
             </div>
           ) : (
-            /* Logged-Out: Auth Modal trigger */
-            <div className="flex items-center gap-2 sm:gap-3">
+            /* Logged-Out: Auth Modal trigger (desktop/tablet header, accessible via hamburger on phone) */
+            <div className="hidden sm:flex items-center gap-2 sm:gap-3">
               <AuthModal
                 onAuthSuccess={handleAuthSuccess}
                 trigger={
@@ -663,7 +663,7 @@ export function Navbar({ initialUser = null, initialAvatarSeed = null }) {
             }
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-navigation"
-            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-border text-muted-foreground hover:text-foreground md:hidden"
+            className="flex h-11 w-11 min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full border border-border text-muted-foreground hover:text-foreground md:hidden"
           >
             <svg
               className="h-5 w-5"

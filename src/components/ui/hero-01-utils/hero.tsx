@@ -158,7 +158,7 @@ function HeroSection({
               </div>
 
               {/* Right Column: Hero Visual / Cost Levers Chart (No border, no box) */}
-              <div className="lg:col-span-6 relative flex items-center justify-center w-full">
+              <div className="lg:col-span-6 relative flex items-center justify-center w-full overflow-hidden sm:overflow-visible">
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95, y: 32 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}

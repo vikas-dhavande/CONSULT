@@ -47,7 +47,7 @@ export function ThemeToggleButton() {
 
   if (!mounted) {
     return (
-      <div className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-secondary/80 text-muted-foreground" />
+      <div className="flex h-9 w-9 sm:h-8 sm:w-8 items-center justify-center rounded-full border border-border bg-secondary/80 text-muted-foreground" />
     );
   }
 
@@ -56,7 +56,7 @@ export function ThemeToggleButton() {
       type="button"
       onClick={toggleTheme}
       aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
-      className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-border bg-secondary/80 text-muted-foreground transition-all duration-150 hover:border-foreground/20 hover:bg-muted hover:text-foreground"
+      className="flex h-9 w-9 sm:h-8 sm:w-8 cursor-pointer items-center justify-center rounded-full border border-border bg-secondary/80 text-muted-foreground transition-all duration-150 hover:border-foreground/20 hover:bg-muted hover:text-foreground"
     >
       {theme === "dark" ? (
         <Sun className="h-3.5 w-3.5 transition-transform duration-200" />
