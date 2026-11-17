@@ -84,9 +84,9 @@ export default function VideoBackgroundCard({
         aria-hidden="true"
       />
 
-      {/* 2. Deep Tint Overlay for Contrast & Readability */}
+      {/* 2. Deep Tint Overlay for Contrast & Readability (Optimized for 60fps playback) */}
       <div
-        className="absolute inset-0 bg-neutral-950/60 backdrop-blur-[2px] transition-colors"
+        className="absolute inset-0 bg-neutral-950/70 pointer-events-none transition-colors"
         aria-hidden="true"
       />
 
