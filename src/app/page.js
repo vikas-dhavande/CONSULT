@@ -8,6 +8,7 @@ import {
   defaultAvatarList,
   defaultBrandList,
 } from "@/components/ui/hero-01";
+import VideoBackgroundCard from "@/components/video-background-card";
 import { ChatBubble } from "@/components/ChatBubble";
 
 export default function Home() {
@@ -26,6 +27,8 @@ export default function Home() {
     <main className="w-full flex-1 relative">
       <HeroSection avatarList={avatars} />
       <BrandSlider brandList={defaultBrandList} />
+      {/* Video Background Operational Benchmarks Section */}
+      <VideoBackgroundCard />
       {/* Floating Chat Bubble (Home page only) */}
       <ChatBubble />
     </main>
