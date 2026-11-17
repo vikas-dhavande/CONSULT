@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import "./app.css";
-import { Navbar } from "@/components/Navbar";
 import {
   HeroSection,
   BrandSlider,
   defaultAvatarList,
   defaultBrandList,
 } from "@/components/ui/hero-01";
+import { ChatBubble } from "@/components/ChatBubble";
 
 export default function Home() {
   const [avatars, setAvatars] = useState(defaultAvatarList);
@@ -23,12 +23,11 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <Navbar />
-      <main className="w-full flex-1">
-        <HeroSection avatarList={avatars} />
-        <BrandSlider brandList={defaultBrandList} />
-      </main>
-    </div>
+    <main className="w-full flex-1 relative">
+      <HeroSection avatarList={avatars} />
+      <BrandSlider brandList={defaultBrandList} />
+      {/* Floating Chat Bubble (Home page only) */}
+      <ChatBubble />
+    </main>
   );
 }

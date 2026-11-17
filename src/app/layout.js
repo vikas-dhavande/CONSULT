@@ -1,3 +1,7 @@
+import "./app.css";
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
+
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL || "https://vikas-consult.pages.dev";
 const siteName =
@@ -125,9 +129,13 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body
-        className={"bg-background text-foreground font-[Inter] text-sm antialiased"}
+        className={"min-h-screen bg-background text-foreground font-[Inter] text-sm antialiased flex flex-col justify-between"}
       >
-        {children}
+        <Navbar />
+        <div className="flex-1 w-full flex flex-col">
+          {children}
+        </div>
+        <Footer />
       </body>
     </html>
   );
